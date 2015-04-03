@@ -1,0 +1,1370 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+  <title>PhoneBook User Manual</title>
+</head>
+<body>
+<div style="text-align: center;"><big style="font-weight: bold;"><big><big>PhoneBook
+Filesystem<br>
+User Manual</big></big></big><br>
+</div>
+<br>
+<div style="text-align: center;"><a href="#intro">Introduction</a> | <a
+ href="#installation">Installation</a> | <a href="#usage">Usage</a> | <a
+ href="#faq">FAQ</a> | <a href="#troubleshooting">Troubleshooting</a><br>
+<div style="text-align: left;"><br>
+<hr style="width: 100%; height: 2px;"><a name="intro"></a><br>
+</div>
+</div>
+<h1>1. Introduction</h1>
+<div style="margin-left: 40px;">This manual aims to make installation
+and usage of your PhoneBook software as easy and pain-free as possible,
+by taking a 'walkthrough' approach.<br>
+</div>
+<h2>1.1. What is 'PhoneBook'?</h2>
+<div style="margin-left: 40px;">PhoneBook is a filesystem for Linux
+computers, which offers strong encryption with plausible deniability
+features.<br>
+<br>
+It is designed for usage in jurisdictions where laws may mandate the
+disclosure of decryption keys on privately owned personal computers.
+With PhoneBook-encrypted volumes, a strategy of multiple encryption
+layers and 'chaffing' makes it difficult or impossible for an
+interrogator to determine whether you are fully complying with
+decryption orders.<br>
+<br>
+PhoneBook is strongly inspired by the <a
+ href="http://www.rubberhose.org">RubberHose</a> project. However, in
+contrast to RubberHose, PhoneBook aims to be easy to install and use,
+targetted at intermediate Linux users and above.<br>
+<br>
+For more information, refer to the (temporary) PhoneBook website at <a
+ href="http://www.freenet.org.nz/phonebook">http://www.freenet.org.nz/phonebook</a>.<br>
+</div>
+<h2>1.2 Features<br>
+</h2>
+<div style="margin-left: 40px;">
+<ul>
+  <li>Uses a physical datastore from a regular filesystem - no need to
+allocate a dedicated physical partition</li>
+  <li>Datastore consists of a single directory, full of files with
+random 40-character filenames, constantly randomised timestamps, and
+all of a fixed size - there is nothing that will indicate to an
+attacker which <span style="font-style: italic;">physical</span> file
+does what</li>
+  <li>Simple to build, install and deploy - just follow the easy
+walkthroughs later in this manual</li>
+  <li>Does not require kernel patching - instead, it automatically
+builds a separate kernel module</li>
+  <li>Free, GPL software</li>
+  <li>Powerful Blowfish encryption with SHA1 hashing</li>
+  <li>Every file in the physical datastore is encrypted with a
+different key and IV</li>
+</ul>
+</div>
+<h2>1.3 Overview of Program Structure</h2>
+<div style="margin-left: 40px;">The PhoneBook software uses the <a
+ href="http://sf.net/projects/avf">FUSE Linux Filesystem</a> framework.
+Best to inform you in advance that FUSE builds and installs a linux
+kernel module (loaded separately, not patched into kernel source tree).
+So if the idea of a kernel module makes you nervous, you might like to
+check out FUSE and satisfy yourself that it's safe enough. We have done
+just that, and have a high level of confidence in FUSE.<br>
+</div>
+<br>
+<hr style="width: 100%; height: 2px;"><a name="installation"></a><br>
+<h1>2. Installation</h1>
+<div style="margin-left: 40px;">Getting PhoneBook installed and running
+should be mostly drama-free, if you carefully follow these instructions.<br>
+</div>
+<h2>2.1 Prerequisites</h2>
+<div style="margin-left: 40px;">Before installing Phonebook, make sure
+you have all of the following:<br>
+</div>
+<ul style="margin-left: 40px;">
+  <li>Your <span style="font-weight: bold;">system's root password<br>
+    <br>
+    </span></li>
+  <li>A <span style="font-weight: bold;">2.4-series kernel</span>
+(2.6-series kernels should work as well, if you follow the instructions
+in the <span style="font-weight: bold;">pbmodules/src/fuse</span>
+directory, and apply the enclosed kernel patch, prior to trying to
+build PhoneBook)<br>
+    <br>
+  </li>
+  <li><span style="font-weight: bold;">A set of kernel header files</span>
+which match your currently running kernel:<br>
+    <ul>
+      <li>If you have built your current kernel from source, these
+headers should already be present at the correct location</li>
+      <li>If you are using a kernel built by your linux distribution
+vendor, you should be able to download/install the matching kernel
+headers as a separate package<br>
+        <br>
+      </li>
+    </ul>
+  </li>
+  <li><a href="http://python.org"><span style="font-weight: bold;">Python
+2.2</span></a> or later<br>
+    <br>
+  </li>
+  <li><span style="font-weight: bold;">Python development files</span>
+(headers/libraries), matching your current version of Python<br>
+    <ul>
+      <li>If you are using your distro's python, you should be able to
+download/install a package named <span style="font-weight: bold;">python-dev</span>
+(or similar) from your distro vendor.<br>
+        <br>
+      </li>
+    </ul>
+  </li>
+  <li><span style="font-weight: bold;"><a href="http://www.openssl.org">OpenSSL</a>
+'libcrypto' library</span>, version 0.9.6 or later<br>
+    <br>
+  </li>
+  <li><span style="font-weight: bold;">OpenSSL libcrypto development
+files</span> (headers and static library)
+matching your OpenSSL installation:<br>
+    <ul>
+      <li>You should see a directory <span style="font-weight: bold;">/usr/include/openssl</span>
+or <span style="font-weight: bold;">/usr/local/bin/openssl</span> with
+a bunch of headers</li>
+      <li>You should see a file <span style="font-weight: bold;">libcrypto.a</span>
+in either <span style="font-weight: bold;">/usr/lib</span> or <span
+ style="font-weight: bold;">/usr/local/lib</span></li>
+    </ul>
+  </li>
+</ul>
+<h2>2.2 Enclosed Software</h2>
+<div style="margin-left: 40px;">As a Linux user, I have lost count of
+all the times I've tried to install a piece of software, only to find
+that it depends on n other packages, each of which depend on n' other
+packages, some of which are poorly packaged. As a result, I've ended up
+in <span style="font-style: italic; font-weight: bold;">Dependency And
+Compilation Hell</span>. Strangely, the developers of such packages
+seem to have the unspoken attitude that if you're not a fluent
+programmer willing to put in the hours reading thousands of lines of
+unfamiliar source code, then you're too much of a n00b to deserve to
+use their software.<br>
+<br>
+The PhoneBook developers don't share this attitude, and have tried hard
+to spare you of similar pain. Therefore, with the more obscure pieces
+of third party software, we have invoked the open source licenses and <span
+ style="font-style: italic;">packaged copies of this software in with
+the PhoneBook distribution.</span><br>
+<br>
+At present, there are only two such dependencies included in the
+package:<br>
+<ul>
+  <li>The <a href="http://sf.net/projects/avf">FUSE</a> (filesystem in
+userland) filesystem framework<br>
+  </li>
+  <li>The <a href="http://www.freenet.org.nz/python/SSLCrypto">SSLCrypto</a>
+Python cryptography bindings</li>
+</ul>
+All the other dependencies (mentioned above) are considered generic
+enough to not warrant inclusion in the PhoneBook distribution.<br>
+</div>
+<h2>2.3 Building PhoneBook</h2>
+<div style="margin-left: 40px;">Follow these simple steps:<br>
+<ul>
+  <li>Unpack your PhoneBook tarball into a safe, globally-accessible
+place (eg <span style="font-weight: bold;">/usr/share</span> or <span
+ style="font-weight: bold;">/var/lib</span>)</li>
+  <li><span style="font-weight: bold;">cd</span> into the top-level
+PhoneBook directory</li>
+  <li>type: <span style="font-weight: bold;">make build</span></li>
+</ul>
+The top-level <span style="font-weight: bold;">Makefile</span> runs
+the python <span style="font-weight: bold;">make.py</span> script,
+which is responsible for:<br>
+<ul>
+  <li>Running autocrap and make on the enclosed <a
+ href="http://sf.net/projects/avf">FUSE</a> software</li>
+  <li>Running Python distutils on the Python module within FUSE</li>
+  <li>Running Python distutils on SSLCrypto, the Python OpenSSL
+libcrypto wrapper</li>
+</ul>
+With all going well, all the requisite software should have built
+successfully, and you should be ready to install PhoneBook<br>
+<br>
+<div style="margin-left: 40px;"><span
+ style="font-weight: bold; font-style: italic;">Note</span><span
+ style="font-style: italic;"> - the most common cause of a failed build
+is if the FUSE package doesn't find your kernel headers. If this
+happens to you, edit the make.py file, find the </span><span
+ style="font-weight: bold; font-style: italic;">kernelHeaders</span><span
+ style="font-style: italic;"> variable near the top, and edit it to
+point to the location of your kernel headers.</span><br>
+</div>
+</div>
+<h2>2.4 Installing PhoneBook</h2>
+<div style="margin-left: 40px;">We have aimed for PhoneBook
+installation to be equally simple.<br>
+<br>
+In fact, you can run the script as a normal user. The script will
+compose a set of commands to be executed as root, and will pass these
+commands to the standard <span style="font-weight: bold;">su </span>command
+(which will itself prompt you for the root password if you're not
+already root).<br>
+<br>
+Simply, to install PhoneBook:<br>
+<ul>
+  <li>type: <span style="font-weight: bold;">make install</span></li>
+</ul>
+</div>
+<h2>2.5 What have I ended up wtih?</h2>
+<div style="margin-left: 40px;">The make and installation of PhoneBook
+will have made the following changes to your system:<br>
+</div>
+<div style="margin-left: 40px;">
+<ul>
+  <li>Written a symbolic link into <span style="font-weight: bold;">/sbin/mount.pbfs</span>,
+which points to the <span style="font-weight: bold;">mount.py</span>
+script in your PhoneBook directory<br>
+    <br>
+  </li>
+  <li>Written a symbolic link into <span style="font-weight: bold;">/usr/bin/pbfs</span>,
+which points to the <span style="font-weight: bold;">util/pbfs.py </span>in
+your PhoneBook directory<br>
+    <br>
+  </li>
+  <li>Written the following files into your Python site-packages
+directory:<br>
+    <ul>
+      <li><span style="font-weight: bold;">SSLCrypto.so</span> - Python
+OpenSSL crypto wrapper</li>
+      <li><span style="font-weight: bold;">fuse.py</span> and <span
+ style="font-weight: bold;">_fusemodule.so</span> - Python interface to
+your FUSE filesystem<br>
+        <br>
+      </li>
+    </ul>
+  </li>
+  <li>Added <span style="font-weight: bold;">fuse.o</span>, the <span
+ style="font-weight: bold;">FUSE Kernel Module</span> into your kernel
+modules tree (usually, /lib/modules/2.x.x/kernel/fs/fuse)<br>
+  </li>
+</ul>
+As you can see, nothing too dramatic.<br>
+</div>
+<br>
+<hr style="width: 100%; height: 2px;"><a name="usage"></a><br>
+<h1>3. Usage</h1>
+<div style="margin-left: 40px;">Creating and using PhoneBook
+filesystems is pretty simple, and consists of the following steps:<br>
+</div>
+<ul style="margin-left: 40px;">
+  <li>Choose or create a directory to serve as the PhoneBook <span
+ style="font-weight: bold;">mountpoint<br>
+    <br>
+    </span></li>
+  <li><span style="font-weight: bold;"><span style="font-weight: bold;"><span
+ style="font-weight: bold;"></span></span></span>Choose or create an
+empty directory to serve as the PhoneBook <span
+ style="font-weight: bold;">datastore<br>
+    <br>
+    </span></li>
+  <li><span style="font-weight: bold;"><span style="font-weight: bold;"></span></span>Mount
+your PhoneBook filesystem<br>
+    <br>
+  </li>
+  <li>Run some quick commands to create and manage layers in your
+PhoneBook filesystem<br>
+    <br>
+  </li>
+  <li>Use your PhoneBook filesystem just like a normal Linux filesystem</li>
+</ul>
+<h2>3.1 Procure the Directories</h2>
+<div style="margin-left: 40px;">You will need two separate (preferably
+empty) directories
+for your PhoneBook filesystem - one to serve as the <span
+ style="font-weight: bold;">mountpoint</span>, and one to contain the <span
+ style="font-weight: bold;">datastore</span>.<br>
+<br>
+Typically, many people will create the mountpoint directory as <span
+ style="font-weight: bold;">/mnt/pbfs</span>, and the datastore
+directory at <span style="font-weight: bold;">/usr/share/pbfs</span>
+(or even as directory <span style="font-weight: bold;">.pbfs</span> or
+<span style="font-weight: bold;">pbfs</span> in their home directory).<br>
+<br>
+Just make sure that you (as user) have read/write/execute permission
+for both these directories. If in doubt, chmod both directories to <span
+ style="font-weight: bold;">777</span> or <span
+ style="font-weight: bold;">ugo+rwx</span>.<br>
+</div>
+<h2>3.2 Mount the Filesystem</h2>
+<div style="margin-left: 40px;">As with any Linux filesystem, there are
+two different ways of mounting a PhoneBook filesystem:<br>
+<ul>
+  <li>Directly, with a <span style="font-weight: bold;">mount</span>
+command</li>
+  <li>Implicitly, by creating an entry in <span
+ style="font-weight: bold;">/mnt/fstab</span></li>
+</ul>
+Note that you don't have to go to any special steps to create the
+filesystem - PhoneBook will create everything on the fly as needed.<br>
+<h3>3.2.1 Mounting Directly via Command Line (not advised)<br>
+</h3>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;"><span style="font-style: italic;"><span
+ style="font-weight: bold;">Please note - in general, we advise you to
+fstab your mount, and do the mount as a user (see below). However,
+command-line mounting works fine as well.</span></span><br>
+<span style="font-style: italic;"><span style="font-weight: bold;"></span></span></div>
+<span style="font-style: italic;"><span style="font-weight: bold;"><br>
+</span></span>Make sure you are root, and type the
+following command:<br>
+<div style="margin-left: 40px;"><span style="font-weight: bold;"><br>
+<span style="color: rgb(0, 153, 0);">mount -t pbfs /path/to/datastore
+/path/to/mountpoint</span></span><br>
+</div>
+<br>
+If you are using the directory names above, this would be:<span
+ style="font-weight: bold;"><br>
+<br>
+</span>
+<div style="margin-left: 40px;"><span
+ style="font-weight: bold; color: rgb(0, 153, 0);">mount
+-t pbfs /usr/share/pbfs /mnt/pbfs</span><br>
+</div>
+</div>
+<br>
+<div style="margin-left: 40px;">If the mount has succeeded, you should
+be able to type the command <span style="font-weight: bold;">mount</span>
+and see the following entry:<br>
+<br>
+<div
+ style="margin-left: 40px; font-weight: bold; color: rgb(153, 0, 0);">/proc/fs/fuse/dev
+on
+/mnt/pbfs type fuse (rw,nosuid,nodev)</div>
+</div>
+</div>
+<div style="margin-left: 80px;"><br>
+If you see this, your filesystem is ready to use - just follow the
+instructions in the next section (managing layers), and you're ready to
+go.<span style="font-style: italic;"><span style="font-weight: bold;"></span></span><br>
+</div>
+<div style="margin-left: 40px;">
+<h3>3.2.2 Mounting via fstab (preferable)<br>
+</h3>
+<div style="margin-left: 40px;">Creating a mount entry in <span
+ style="font-weight: bold;">/etc/fstab</span> (or wherever your distro
+puts its mount table) will make your life easier when mounting and
+unmounting. For one thing, you can allow yourself to mount the
+filesystem as a user. For another thing, you'll only need a single
+argument - the mountpoint.<br>
+<br>
+To make your PhoneBook filesystem mountable via the fstab, just put
+into <span style="font-weight: bold;">/etc/fstab</span> the following <span
+ style="font-weight: bold;">two lines</span>:<br>
+<br>
+<div style="margin-left: 40px; color: rgb(153, 51, 153);"><span
+ style="font-weight: bold;">#
+PhoneBook filesystem mount<br>
+/usr/share/pbfs /mnt/pbfs pbfs
+defaults,noauto,user,exec 0 0<br>
+</span></div>
+<br>
+Note that you may need to change the <span style="font-weight: bold;">/mnt/pbfs
+</span>and <span style="font-weight: bold;">/usr/share/pbfs</span> to
+your PhoneBook <span style="font-weight: bold;">mountpoint</span> and <span
+ style="font-weight: bold;">datastore</span> directories respectively.<br>
+</div>
+</div>
+<h2>3.3 Creating and Using Layers</h2>
+<div style="margin-left: 40px;">Ok - if you've made it here, then
+congratulations. You have successfully built and installed PhoneBook,
+and completed your first mount of a PhoneBook filesystem.<br>
+<br>
+However, your filesystem is not quite ready to use. You now need to set
+up one or more <span style="font-weight: bold;">layers</span>.<br>
+<br>
+Don't worry - this is easy, and can be done with the PhoneBook <span
+ style="font-weight: bold;">pbfs</span> utility (which should have been
+installed into /usr/bin).<br>
+<br>
+To see the current state of the filesystem layers, type the command:<br>
+<br>
+<div style="margin-left: 40px;"><span style="font-weight: bold;">$ <span
+ style="color: rgb(0, 153, 0);">pbfs
+/mnt/pbfs listmap</span></span><br>
+</div>
+<br>
+You should see something like:<br>
+<div
+ style="margin-left: 40px; font-weight: bold; color: rgb(153, 0, 0);">
+<pre><big>PhoneBookFS Layer Map Report:<br>&nbsp; Mountpoint: /mnt/pbfs<br>&nbsp; Map Name:&nbsp;&nbsp; ** USING TEMPORARY SCRATCH MAP **<br>&nbsp; Layers:&nbsp;&nbsp;&nbsp;&nbsp; ** NO LAYERS CURRENTLY IN MAP **</big></pre>
+</div>
+This tells us that the filesystem is active, but cannot be used,
+because there are no layers currently present.<br>
+<br>
+Ok - let's now create and add a layer to our filesystem. We'll call
+this layer <span style="font-weight: bold;">layer1</span>, and give it
+the passphrase <span style="font-weight: bold;">layer1pass</span>.<br>
+<br>
+Type the following command:<br>
+<br>
+<div style="margin-left: 40px;"><span style="font-weight: bold;">$ <span
+ style="color: rgb(0, 153, 0);">pbfs
+/mnt/pbfs addlayer layer1 layer1pass</span></span><br>
+</div>
+<br>
+You should see something like:<br>
+<div
+ style="margin-left: 40px; font-weight: bold; color: rgb(153, 0, 0);">
+<pre><big>/usr/bin/pbfs: success: addlayer: new layer 'layer1' successfully appended</big></pre>
+</div>
+You can verify that this has worked by again typing:<br>
+<br>
+<div style="margin-left: 40px;"><span style="font-weight: bold;">$ <span
+ style="color: rgb(0, 153, 0);">pbfs
+/mnt/pbfs listmap</span></span><br>
+</div>
+<br>
+This time, you should see the output:<br>
+<div
+ style="margin-left: 40px; font-weight: bold; color: rgb(153, 0, 0);">
+<pre><big>PhoneBookFS Layer Map Report:<br>&nbsp; Mountpoint: /mnt/pbfs<br>&nbsp; Map Name:&nbsp;&nbsp; ** USING TEMPORARY SCRATCH MAP **<br>&nbsp; Layers:&nbsp;&nbsp;&nbsp;&nbsp; layer1</big></pre>
+</div>
+</div>
+<div style="margin-left: 40px;">This indicates that your filesystem now
+has a single layer, <span style="font-weight: bold;">layer1</span>.
+Note that you can add as many layers as you like.<br>
+</div>
+<h2>3.4 Now We Can Use The Damn Thing!</h2>
+<div style="margin-left: 40px;">Thanks for bearing with us so far.
+(Hopefully there haven't been any problems along the way).<br>
+<br>
+We are now ready to do something with our filesystem.<br>
+<br>
+Try typing in the following shell commands, and comparing the output to
+what we show below. As before, we are showing what you need to type in <span
+ style="color: rgb(0, 102, 0);">green</span>, and the expected output
+in <span style="color: rgb(153, 51, 0);">red</span>. (Note that you
+don't type the '$' - it's the shell prompt).<br>
+<br>
+Note that for now on, you might want to do this in a separate console
+(because the console from which you mounted the filesystem will be
+outputting a lot of annoying messages).<br>
+<div style="margin-left: 40px; font-weight: bold;"><big>
+</big>
+<pre><big>$ <span style="color: rgb(0, 153, 0);">ls -l /mnt/pbfs</span><br><span
+ style="color: rgb(153, 0, 0);">total 0</span><br>$ <span
+ style="color: rgb(0, 153, 0);">echo "Hello, world" &gt; /mnt/pbfs/somefile</span><br>$ <span
+ style="color: rgb(0, 153, 0);">cat /mnt/pbfs/somefile</span><br><span
+ style="color: rgb(153, 0, 0);">Hello, world</span><br>$ <span
+ style="color: rgb(0, 153, 0);">ls -l /mnt/pbfs/somefile</span><br><span
+ style="color: rgb(153, 0, 0);">total 1</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">-rw-r--r--&nbsp;&nbsp; 0 root&nbsp;&nbsp; root&nbsp;&nbsp;&nbsp;&nbsp; 13 2003-12-22 21:25 somefile</span><br>$ <span
+ style="color: rgb(0, 153, 0);">rm /mnt/pbfs/somefile</span><br>$ <span
+ style="color: rgb(0, 153, 0);">ls -l /mnt/pbfs/somefile</span><br><span
+ style="color: rgb(153, 0, 0);">total 0</span><br>$<br></big></pre>
+</div>
+As you can see, we have created, read and deleted a single file.<br>
+<br>
+<div style="margin-left: 40px;"><span style="font-style: italic;"><span
+ style="font-weight: bold;">Note also that the file exists with owner
+and group set to root. This is because all files get created with the
+user and group id of whoever mounted the filesystem. If you want these
+files to be created with uid/gid set to a user, then create an fstab
+entry (see above) and use this fstab entry to mount the filesystem.</span></span><br>
+</div>
+<br>
+Just for interest's sake, do an '<span style="font-weight: bold;">ls</span>'
+command on your PhoneBook datastore directory (<span
+ style="font-weight: bold;">/usr/share/pbfs</span>, if you used the
+conventions above). You should see a list of files with gibberish names
+and gibberish content.<br>
+<br>
+Any attacker (eg a forensic engineer) analysing these files should not
+be able to determine which of the files are which. As you use your
+filesystem, and create more layers (and chaff), it will become
+impossible to determine just how many layermaps, layers or files there
+truly are (and which are just deliberate chaff).<br>
+</div>
+<h2>3.5 Managing Layer-Maps</h2>
+<div style="margin-left: 40px;">Recall above than when we issue the
+command <span style="font-weight: bold;">pbfs /mnt/pbfs listmap</span>
+we see an entry saying that we are using a <span
+ style="font-weight: bold;">temporary scratch map</span>. Now is the
+time to explain what this means.<br>
+<br>
+The greatest weakness in any encryption technology is the human factor
+- the vulnerability people have to slipping up and neglecting proper
+practice.<br>
+<br>
+Any software that makes it more complicated to use good practice
+actually gives the user an incentive to be slack with security, which
+can be worse than no encryption (<span
+ style="font-weight: bold; font-style: italic;">because a false sense
+of security is worse than a real knowledge of insecurity</span>).<br>
+<br>
+The whole business of 'layers' in PhoneBook can become an annoying pain
+in the butt after a short time. One can be tempted to use weak
+passwords, or not enough layers, which will make your filesystem open
+to all manner of dictionary attacks and plain old human-intuitive
+hacking.<br>
+<br>
+To remedy this, we have added a mechanism we call <span
+ style="font-weight: bold;">layer maps</span>. Basically, a layer map
+is a determined set of layers in a determined order.<br>
+<br>
+You can create a named layer map (with its own passphrase), and
+create/add any combination of layers to it. Once you've done this, you
+can just open the map with a single name and passphrase - it will
+reactivate all the layers in the right order automatically.<br>
+<br>
+Let's put this into practice. Below, we will:<br>
+<ul>
+  <li>mount our filesystem</li>
+  <li>create a named layermap</li>
+  <li>add three layers to it</li>
+  <li>unmount the filesystem<br>
+  </li>
+  <li>mount the filesystem again</li>
+  <li>re-open the layermap we created</li>
+  <li>verify that the correct layers are present</li>
+</ul>
+<span style="font-style: italic;"><span style="font-weight: bold;">IMPORTANT
+NOTE<span style="font-style: italic;"><span style="font-weight: bold;">
+- keep pen and paper handy for noting all passphrases for your layers
+and layermaps. Under no circumstances should you store these on any
+hard disk (except maybe a floppy, itself secured by PhoneBook or
+another encryption tool).</span></span></span></span><br>
+<br>
+Ok - let's do it (make sure that your filesystem is not presently
+mounted):<br>
+<div style="margin-left: 40px;">
+<pre style="font-weight: bold;"><big>$ <span
+ style="color: rgb(0, 153, 0);">su</span><br><span
+ style="color: rgb(153, 0, 0);">Password:</span> (type in your root password)</big></pre>
+</div>
+</div>
+<div style="margin-left: 40px;"><span style="font-style: italic;">(mount
+the filesystem)<br>
+</span></div>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;">
+<pre style="font-weight: bold;"><big># <span
+ style="color: rgb(0, 153, 0);">mount -t pbfs /usr/share/pbfs /mnt/pbfs</span></big></pre>
+</div>
+</div>
+<div style="margin-left: 40px;"><span style="font-style: italic;">(verify
+that we are currently using the 'scratch map')</span><br>
+</div>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;">
+<pre style="font-weight: bold;"><big># <span
+ style="color: rgb(0, 153, 0);">pbfs /mnt/pbfs listmap</span><br><span
+ style="color: rgb(153, 0, 0);">PhoneBookFS Layer Map Report:</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Mountpoint: /mnt/pbfs</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Map Name:&nbsp;&nbsp; ** USING TEMPORARY SCRATCH MAP **</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Layers:&nbsp;&nbsp;&nbsp;&nbsp; ** NO LAYERS CURRENTLY IN MAP **</span></big></pre>
+</div>
+</div>
+<div style="margin-left: 40px;"><span style="font-style: italic;">(create
+a new map)</span><br>
+</div>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;">
+<pre style="font-weight: bold;"><big># <span
+ style="color: rgb(0, 153, 0);">pbfs /mnt/pbfs openmap mymap mypass</span><br><span
+ style="color: rgb(153, 0, 0);">/usr/bin/pbfs: success: now using layermap 'mymap'</span></big></pre>
+</div>
+</div>
+<div style="margin-left: 40px;"><span style="font-style: italic;">(notice
+that the map is active, but has no layers)</span><br>
+</div>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;">
+<pre style="font-weight: bold;"><big># <span
+ style="color: rgb(0, 153, 0);">pbfs /mnt/pbfs listmap</span><br><span
+ style="color: rgb(153, 0, 0);">PhoneBookFS Layer Map Report:</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Mountpoint: /mnt/pbfs</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Map Name:&nbsp;&nbsp; mymap</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Layers:&nbsp;&nbsp;&nbsp;&nbsp; ** NO LAYERS CURRENTLY IN MAP **</span></big></pre>
+</div>
+</div>
+<div style="margin-left: 40px;"><span style="font-style: italic;">(add
+a
+couple of layers)</span><br>
+</div>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;">
+<pre style="font-weight: bold;"><big># <span
+ style="color: rgb(0, 153, 0);">pbfs /mnt/pbfs addlayer layer1 layer1pass</span><br><span
+ style="color: rgb(153, 0, 0);">/usr/bin/pbfs: success: addlayer: new layer 'layer1' successfully appended</span><br># <span
+ style="color: rgb(0, 153, 0);">pbfs /mnt/pbfs addlayer layer2 layer2pass</span><br><span
+ style="color: rgb(153, 0, 0);">/usr/bin/pbfs: success: addlayer: new layer 'layer2' successfully appended</span></big></pre>
+</div>
+</div>
+<div style="margin-left: 40px;"><span style="font-style: italic;">(notice
+that these layers are now on the map)</span><br>
+</div>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;">
+<pre style="font-weight: bold;"><big># <span
+ style="color: rgb(0, 153, 0);">pbfs /mnt/pbfs listmap</span><br><span
+ style="color: rgb(153, 0, 0);">PhoneBookFS Layer Map Report:</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Mountpoint: /mnt/pbfs</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Map Name:&nbsp;&nbsp; mymap</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Layers:&nbsp;&nbsp;&nbsp;&nbsp; layer1:layer2</span></big></pre>
+</div>
+</div>
+<div style="margin-left: 40px;"><span style="font-style: italic;">(unmount
+and re-mount the filesystem)</span><br>
+</div>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;">
+<pre style="font-weight: bold;"><big># <span
+ style="color: rgb(0, 153, 0);">umount /mnt/pbfs</span><br># <span
+ style="color: rgb(0, 153, 0);">mount -t pbfs /usr/share/pbfs /mnt/pbfs</span></big></pre>
+</div>
+</div>
+<div style="margin-left: 40px;"><span style="font-style: italic;">(notice
+that no layers or map are presently active)</span><br>
+</div>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;">
+<pre style="font-weight: bold;"><big># <span
+ style="color: rgb(0, 153, 0);">pbfs /mnt/pbfs listmap</span><br><span
+ style="color: rgb(153, 0, 0);">PhoneBookFS Layer Map Report:</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Mountpoint: /mnt/pbfs</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Map Name:&nbsp;&nbsp; ** USING TEMPORARY SCRATCH MAP **</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Layers:&nbsp;&nbsp;&nbsp;&nbsp; ** NO LAYERS CURRENTLY IN MAP **</span></big></pre>
+</div>
+</div>
+<div style="margin-left: 40px;"><span style="font-style: italic;">(open
+up the map we created a moment ago)</span><br>
+</div>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;">
+<pre style="font-weight: bold;"><big># <span
+ style="color: rgb(0, 153, 0);">pbfs /mnt/pbfs openmap mymap mypass</span><br><span
+ style="color: rgb(153, 0, 0);">/usr/bin/pbfs: success: now using layermap 'mymap'</span></big></pre>
+</div>
+</div>
+<div style="margin-left: 40px;"><span style="font-style: italic;">(notice
+that our layer stack is recalled as it was)</span><br>
+</div>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;">
+<pre style="font-weight: bold;"><big># <span
+ style="color: rgb(0, 153, 0);">pbfs /mnt/pbfs listmap</span><br><span
+ style="color: rgb(153, 0, 0);">PhoneBookFS Layer Map Report:</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Mountpoint: /mnt/pbfs</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Map Name:&nbsp;&nbsp; mymap</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">&nbsp; Layers:&nbsp;&nbsp;&nbsp;&nbsp; layer1:layer2</span></big></pre>
+</div>
+So, what the hell does all this mean?<br>
+<br>
+It means that with 'layermaps', you can create specifications for 'sets
+of layers in particular order', that can be stored and recalled with a
+single name and passphrase.<br>
+<br>
+Needless to say, a layermap passphrase is exceedingly sensitive,
+because it yields up all the names and passphrases for the layers it
+contains. So guard a layermap password like you guard your root
+password - in fact, guard it even better!<br>
+</div>
+<h2>3.6 The Magic '__layers' Directory</h2>
+<div style="margin-left: 40px;">Normally, when you read a file on your
+filesystem, the version of the file you get comes from the top-most
+layer that has this file.<br>
+<br>
+For instance, with the above examples, if layer1 and layer2 both have a
+file <span style="font-weight: bold;">/somedir/somefile.jpg</span>
+(the path is relative to the mountpoint), and you try to open <span
+ style="font-weight: bold;">/mnt/pbfs/somedir/somefile.jpg</span>, you
+will get the version of <span style="font-weight: bold;">somefile.jpg</span>
+from layer1.<br>
+<br>
+On the other hand, any files you write to the filesystem will get
+written into the top-most layer in the stack - in this case, <span
+ style="font-weight: bold;">layer1</span>.<br>
+<br>
+However, to take full and convenient advantage of the layered crypto
+features of PhoneBook, you will at times need to control exactly which
+layers you read from and write to.<br>
+<br>
+To this end, mounted PhoneBook filesystems have a 'magic directory'
+called <span style="font-weight: bold;">__layers</span>. Each
+currently active layer appears by name as a subdirectory of __layers.<br>
+<br>
+For example, make sure your have your filesystem mounted, and the map <span
+ style="font-weight: bold;">mymap</span> open (as per above). Then try
+the following:<br>
+<div style="margin-left: 40px; font-weight: bold;">
+<pre><big># <span style="color: rgb(0, 153, 0);">ls -l /mnt/pbfs/__layers</span><br><span
+ style="color: rgb(153, 0, 0);">total 2</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">dr-xr-xr-x&nbsp;&nbsp;&nbsp; 1 root&nbsp;&nbsp;&nbsp;&nbsp; root&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1024 2003-12-22 22:31 layer1</span><br
+ style="color: rgb(153, 0, 0);"><span style="color: rgb(153, 0, 0);">dr-xr-xr-x&nbsp;&nbsp;&nbsp; 1 root&nbsp;&nbsp;&nbsp;&nbsp; root&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1024 2003-12-22 22:31 layer2</span></big></pre>
+</div>
+</div>
+<div style="margin-left: 40px;">If you want to operate explicitly on <span
+ style="font-weight: bold;">layer1</span>, just stick <span
+ style="font-weight: bold;">__layers/layer1/</span> into the path.
+Ditto for <span style="font-weight: bold;">layer2</span>.<br>
+<br>
+Using the <span style="font-weight: bold;">__layers</span>
+pseudo-directory, you can:<br>
+<ul>
+  <li>copy/move files between layers</li>
+  <li>create different versions of the same file in different layers</li>
+  <li>anything else which meets your security needs and desires.</li>
+</ul>
+Note that you can have many different layermaps, which share any
+combination of the same layers. For instance, you could have map <span
+ style="font-weight: bold;">mymap1</span>, which contains layers <span
+ style="font-weight: bold;">layer1, layer2, layer3</span>. You could
+have map <span style="font-weight: bold;">mymap2</span>, which
+contains layers <span style="font-weight: bold;">layer2, layer4</span>.<br>
+<br>
+Recall that you could even have two or more layermaps with the same map
+name, but different passphrases. If you do this, then Phonebook will
+treat them as completely distinct layermaps.<br>
+<br>
+You can even do this with layers - have two or more layers with the
+same name, but with different passphrases. This will result in distinct
+layers. (If you do this, though, take care when building your
+layermaps, so that you have the right version of each named layer).<br>
+</div>
+<span style="font-weight: bold;"><br>
+</span>
+<h2><span style="font-weight: bold;">3.7 More About The pbfs Utility</span></h2>
+<h2><span style="font-weight: bold;"></span></h2>
+<div style="margin-left: 40px;">The <span style="font-weight: bold;">pbfs</span>
+utility gives you the means to talk to a live-running PhoneBook
+filesystem, and perform tasks such as:<br>
+</div>
+<ul style="margin-left: 40px;">
+  <li>creating layermaps</li>
+  <li>viewing the structure of layermaps</li>
+  <li>adding/removing layers to/from layermaps</li>
+  <li>creating layers</li>
+  <li>switching from one layermap to another</li>
+  <li>adding 'chaff' to the datastore, for plausible deniability<br>
+  </li>
+</ul>
+<div style="margin-left: 40px;">Here are the <span
+ style="font-weight: bold;">pbfs</span> commands and options:<br>
+<div style="margin-left: 40px;">
+<pre style="font-weight: bold;"><big><big>pbfs <span
+ style="color: rgb(0, 153, 0); font-weight: bold;">-h|--help|help [command]</span></big></big></pre>
+<div style="margin-left: 40px;">Prints a help summary with a list of
+available commands. If <span style="font-weight: bold;">command</span>
+is given (and is a known command), it prints more detailed info on that
+command.<br>
+</div>
+<pre style="font-weight: bold;"><big><big>pbfs <span
+ style="color: rgb(153, 51, 153);">/path/to/mountpoint</span> <span
+ style="color: rgb(0, 153, 0);">listmap</span></big></big></pre>
+<div style="margin-left: 40px;">Prints the name of the current
+layermap, and the layers it uses.<br>
+</div>
+<pre style="font-weight: bold;"><big><big>pbfs <span
+ style="color: rgb(153, 51, 153);">/path/to/mountpoint</span> <span
+ style="color: rgb(0, 153, 0);">openmap</span> <span
+ style="color: rgb(102, 0, 204);">mapname [mappass]</span></big></big></pre>
+<div style="margin-left: 40px;">Closes the current layermap, and loads
+a new one.<br>
+<br>
+If no layermap (specified by name <span style="font-weight: bold;">mapname</span>
+and passphrase <span style="font-weight: bold;">mappass</span>)
+currently exists, it will be created, in which case it will be
+initially empty, and will need one or more layers to be added before it
+can be used.<br>
+<br>
+If you don't give the map passphrase, you will be given a non-echoing
+prompt for it.<br>
+<br>
+<div style="margin-left: 40px;"><span style="font-style: italic;">Be
+warned - if you specify the passphrase on the command line, it can end
+up in shell history files (defeating the whole purpose of PhoneBook).
+Another warning - DO NOT put passphrases into any script files!</span><br>
+</div>
+</div>
+<pre style="font-weight: bold;"><big><big>pbfs <span
+ style="color: rgb(153, 51, 153);">/path/to/mountpoint</span> <span
+ style="color: rgb(0, 153, 0);">destroymap</span> <span
+ style="color: rgb(102, 0, 204);">mapname [mappass]</span></big></big>
+</pre>
+<div style="margin-left: 40px;">Destroys the current layermap, and its
+file(s) on the datastore.<br>
+<br>
+Note that this does <span style="font-weight: bold;">not</span> delete
+the layers referenced therein, or any of their files.<br>
+<br>
+If you don't give the map passphrase, you will be given a non-echoing
+prompt for it.<br>
+<br>
+<div style="margin-left: 40px;"><span style="font-style: italic;">Be
+warned - if you specify the passphrase on the command line, it can end
+up in shell history files (defeating the whole purpose of PhoneBook).
+Another warning - DO NOT put passphrases into any script files!</span></div>
+</div>
+<pre style="font-weight: bold;"><big><big>pbfs <span
+ style="color: rgb(153, 51, 153);">/path/to/mountpoint</span> <span
+ style="color: rgb(0, 153, 0);">addlayer</span> <span
+ style="color: rgb(102, 0, 204);">layername [layerpass]</span></big></big></pre>
+<div style="margin-left: 40px;">Opens a layer, and appends it to the
+bottom of the current layermap's layer stack.<br>
+<br>
+If no layer (specified by name <span style="font-weight: bold;">layername</span>
+and passphrase <span style="font-weight: bold;">layerpass</span>)
+currently exists, it will be created.<br>
+<br>
+If a named layermap is active (not the initial 'scratch layermap'), it
+will be automatically saved so that it remembers the newly added layer.<br>
+<br>
+If you don't give the map passphrase, you will be given a non-echoing
+prompt for it.<br>
+<br>
+<div style="margin-left: 40px;"><span style="font-style: italic;">Be
+warned - if you specify the passphrase on the command line, it can end
+up in shell history files (defeating the whole purpose of PhoneBook).
+Another warning - DO NOT put passphrases into any script files!</span></div>
+</div>
+<pre style="font-weight: bold;"><big><big>pbfs <span
+ style="color: rgb(153, 51, 153);">/path/to/mountpoint</span> <span
+ style="color: rgb(0, 153, 0);">pushlayer</span> <span
+ style="color: rgb(102, 0, 204);">layername [layerpass]</span></big></big></pre>
+<div style="margin-left: 40px;">Same as <span
+ style="font-weight: bold;">addlayer</span>, but pushes the newly
+opened (or created) layer to the <span style="font-weight: bold;">top</span>
+of the current layermap's layer stack.<br>
+<br>
+If you don't give the map passphrase, you will be given a non-echoing
+prompt for it.<br>
+<br>
+<div style="margin-left: 40px;"><span style="font-style: italic;">Be
+warned - if you specify the passphrase on the command line, it can end
+up in shell history files (defeating the whole purpose of PhoneBook).
+Another warning - DO NOT put passphrases into any script files!</span><br>
+</div>
+</div>
+<pre style="font-weight: bold;"><big><big>pbfs <span
+ style="color: rgb(153, 51, 153);">/path/to/mountpoint</span> <span
+ style="color: rgb(0, 153, 0);">droplayer</span> <span
+ style="color: rgb(102, 0, 204);">layername</span></big></big></pre>
+<div style="margin-left: 40px;">Removes the named layer <span
+ style="font-weight: bold;">layername</span> from the layermap stack.<br>
+<br>
+Note that the layer itself, and its contents, will be completely
+unaffected.<br>
+<br>
+</div>
+<div style="margin-left: 40px;">If a named layermap is active (not the
+initial 'scratch layermap'), it will be automatically saved so that it
+remembers the newly added layer.<br>
+</div>
+<pre style="font-weight: bold;"><big><big>pbfs <span
+ style="color: rgb(153, 51, 153);">/path/to/mountpoint</span> <span
+ style="color: rgb(0, 153, 0);">poplayer</span></big></big></pre>
+<div style="margin-left: 40px;">Drops the topmost layer from the
+layermap stack.<br>
+<div style="margin-left: 40px;"><br>
+</div>
+Note that the layer itself, and its contents, will be completely
+unaffected.<br>
+<div style="margin-left: 40px;"><br>
+</div>
+</div>
+<div style="margin-left: 40px;">If a named layermap is active (not the
+initial 'scratch layermap'), it will be automatically saved so that it
+remembers the newly added layer.<br>
+</div>
+</div>
+<pre style="font-weight: bold; margin-left: 40px;"><big><big>pbfs <span
+ style="color: rgb(153, 51, 153);">/path/to/mountpoint</span> <span
+ style="color: rgb(0, 153, 0);">makechaff <span
+ style="color: rgb(102, 0, 204);">size</span></span></big></big></pre>
+<div style="margin-left: 80px;">Adds a quantity of 'chaff' to the
+physical datastore, to provide plausible deniability about the actual
+amount of real data in the store.<br>
+<br>
+Since all the files in the datastore have hashed or random names,
+encrypted or random contents, and random dates, it should prove very
+difficult for an attacker to discern whether each given file is part of
+a layermap, part of an inode, part of a file or just a piece of chaff.<br>
+<br>
+If you find yourself in any situation of pressure to disclose
+decryption keys, you can assert to your attacker that you have executed
+this command several times and forgotten what <span
+ style="font-weight: bold;">size</span> argument you specified.<br>
+<br>
+The very presence and implementation of this command gives you a
+measure of plausible deniability. However, you are advised to actually <span
+ style="font-weight: bold;">use</span> it, and add an amount of chaff
+which is between 10% and 400% of the total amount of real data, or
+perhaps 100% to 500% of the size of the largest layer (you can
+determine the size of each open layer with the command:<br>
+<div style="margin-left: 40px; font-weight: bold;">
+<pre><big>du -s /path/to/mountpoint/__layers/layername</big></pre>
+</div>
+The <span style="font-weight: bold;">size</span> argument is the
+number of bytes of chaff to generate. It may have a suffix of <span
+ style="font-weight: bold;">k</span>, <span style="font-weight: bold;">m</span>
+or <span style="font-weight: bold;">g</span>, meaning <span
+ style="font-weight: bold;">kilobytes</span>, <span
+ style="font-weight: bold;">megabytes</span> or <span
+ style="font-weight: bold;">gigabytes</span> respectively. (Note that
+the suffix is case-insensitive).<br>
+<br>
+Since each physical datastore file is a fixed size (default 16kB), the
+size you specify will be rounded up to the nearest 16k.<br>
+<br>
+</div>
+<br>
+You can get this information by typing '<span style="font-weight: bold;">pbfs
+-h</span>'.<br>
+<br>
+</div>
+<br>
+<h2>3.9 Security Precautions<br>
+</h2>
+<div style="margin-left: 40px;">Here are some guidelines to minimise
+the possibility of your data being compromised:<br>
+<ol>
+  <li><span style="font-weight: bold;">Use Good Passphrases<br>
+    </span><br>
+    <ul>
+      <li>We perceive that the greatest vulnerability of PhoneBook is
+to <span style="font-style: italic;">dictionary attacks</span>, where
+the attacker uses a program that randomly constructs brute-force
+passphrases from common words, numbers and expressions. To defeat such
+attacks, make sure your passphrases are at least sixteen characters,
+and contain character combinations that don't occur in dictionaries or
+normal human expression<br>
+        <br>
+      </li>
+    </ul>
+  </li>
+  <li><span style="font-weight: bold;">Create Lots of Fake Layers and
+Files<br>
+    </span><br>
+    <ul>
+      <li>The more decoy files you have in the datastore, the harder it
+will be for an attacker to determine just how much real content
+actually exists. Alternatively, you could lie under interrogation and
+simply <span style="font-style: italic;">tell</span> your attacker
+that you have created a lot of fake data, but this could be risky.
+Future versions of Phonebook are likely to feature automatic periodical
+chaff generation.<br>
+        <br>
+      </li>
+    </ul>
+  </li>
+  <li><span style="font-weight: bold;">Don't Enter Passphrases On The
+Command Line<br>
+    </span><br>
+    <ul>
+      <li>Although the <span style="font-weight: bold;">pbfs</span>
+utility allows this, it's not a good idea since your passphrases can
+end up in your shell command history files<br>
+        <br>
+      </li>
+    </ul>
+  </li>
+  <li><span style="font-weight: bold;">Don't Hard-Code Passphrases Into
+Command Scripts, or into ANY File<br>
+    </span><br>
+    <ul>
+      <li>That would be like buying a high-quality safe, and sticking
+the combination on a post-it note on the door. If you don't trust
+yourself to remember your passphrases, write them down on a piece of
+paper and keep that piece of paper secure.<br>
+        <br>
+      </li>
+    </ul>
+  </li>
+  <li><span style="font-weight: bold;">Use An Encrypted Swap Partition<br>
+    </span><br>
+    <ul>
+      <li>If your linux distribution supports this, it will save you
+much heartache. You won't have to worry about the Phonebook internal
+data structures getting swapped out to disk, revealing layer details
+and passphrases.<br>
+        <br>
+      </li>
+      <li>If your linux distro doesn't support swapfile encryption,
+there is an excellent package called <span style="font-weight: bold;">loop-AES,</span>
+downloadable from <a href="http://loop-aes.sourceforge.net">http://loop-aes.sourceforge.net</a>,
+which can be easily set up for swapfile encryption via a loop device.
+Be sure to follow its instructions to the letter. The README
+instructions are fairly detailed, but will lead you clearly
+step-by-step through the whole process. After building/installing the
+AES-powered loop driver, just follow the instructions in the swapfile
+encryption example. <span style="font-style: italic;">Don't be timid -
+I'm no kernel hacker, and it only took me 20 mins or less from start to
+finish.<br>
+        </span><br>
+      </li>
+    </ul>
+  </li>
+  <li><span style="font-weight: bold;">Don't Export pbfs-Mounted
+Directories</span><br>
+    <ul>
+      <li>Unless you feel confident in your network's security.
+Forensic attackers in many jurisdictions are now legally entitled to
+crack into your system with any means they see fit - eg exploiting
+known vulnerabilities in servers you may be running. This is bad
+enough, but exporting your pbfs mounts will only exacerbate the danger.<br>
+        <br>
+      </li>
+    </ul>
+  </li>
+  <li><span style="font-weight: bold;">Set 'noatime' On The Partition
+Hosting The Datastore<br>
+    <br>
+    </span>
+    <ul>
+      <li>PhoneBook fights against analysis of the physical datastore
+in different ways. For one, all physical files are the same size.
+Secondly, each file is encrypted with a different Blowfish key.
+Thirdly, the files are given random names (or, in some cases, hashes).
+Fourthly, the atimes/mtimes of all physical files get randomised upon
+mount, and every time a physical file gets written or changed, its
+atime and mtime get randomised again. <span style="font-style: italic;">But,
+        </span>if you want to be doubly sure, you could set noatime on
+the partition which hosts the datastore directory.<br>
+        <br>
+      </li>
+    </ul>
+  </li>
+  <li><span style="font-weight: bold;">Generate chaff often<br>
+    </span>
+    <ul>
+      <li>This is the whole key to your plausible deniability. If you
+(say) have a physical datastore with 240MB of files, and you only
+provide access details for 180MB worth of data, your attacker will want
+you to account for the remaining 60MB. You may in truth have 40MB of
+high-sensitivity material and 20MB of chaff, but you can freely tell
+your attacker that there is in fact 60MB of chaff. Your attacker will
+have a difficult time trying to prove otherwise.</li>
+      <li>If you don't generate chaff, and you don't have a familiar
+'feel' of the <span style="font-weight: bold;">makechaff</span>
+command, your position of deniability could be seriously weakened.<br>
+      </li>
+    </ul>
+  </li>
+</ol>
+</div>
+<br>
+<h2>3.9 Conclusion</h2>
+<div style="margin-left: 40px;">If you have followed the walkthrough in
+this chapter, and improvised with your own experiments, you will have:<br>
+<ul>
+  <li>mounted/unmounted your own PhoneBook filesystem(s)</li>
+  <li>created two or more named layers</li>
+  <li>created one or more layermaps, and specified an ordered stack of
+layers within these layermaps</li>
+  <li>used the __layers pseudo-directory to do file reads/writes
+targetted at explicit layers.</li>
+</ul>
+Hopefully, you should now be seeing how you can construct several
+different layermaps, each intended for access by different classes of
+viewers (eg friends, business associates, business rivals, hostile
+forensic analysts etc).<br>
+<br>
+Also, you will most likely realise how you can create 'chaff' layers -
+to permanently and irreversibly pollute your datastore with random
+gibberish - to destroy any hope an attacker may have for discovering
+just how many layermaps and layers there actually are.<br>
+<br>
+We expect by this time that the seeds of a filesystem security strategy
+will already be sprouting in your mind.<br>
+</div>
+<br>
+<hr style="width: 100%; height: 2px;">
+<h1><a name="faq"></a><span style="font-weight: bold;"></span><br>
+4. Frequently-Asked Questions</h1>
+<ul>
+  <li><span style="font-weight: bold;">What happens if I forget the
+name or passphrase for a layermap?</span></li>
+</ul>
+<div style="margin-left: 80px;"><span style="font-style: italic;">You're
+out of luck. All you can do is try to remember which layers were in
+that layermap, and in which order, and create a whole new layermap with
+the same set of layers in the same order. </span>You do know these
+layers' names and passphrases, don't you!?<br>
+</div>
+<ul style="font-weight: bold;">
+  <li>What happens if I forget the name or passphrase for a layer?</li>
+</ul>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;"><span style="font-style: italic;">If
+the layer is referenced within a layermap, and you can remember the
+name/passphrase of that layermap, you're safe. Just mount your
+filesystem, open the layermap, and move the files out of there and into
+a new layer (and be more careful with the name/passphrase next time).</span><br>
+<span style="font-style: italic;"></span></div>
+<span style="font-style: italic;"><br>
+</span>
+<div style="margin-left: 40px;"><span style="font-style: italic;">If
+the layer is not referenced within the layermap, then your files are
+history. They're still in the datastore, but stored under gibberish
+filenames and with heavy encryption. Doesn't help you though, so you'd
+best just kiss them goodbye and learn from the experience.<br>
+</span><span style="font-style: italic;"></span></div>
+</div>
+<ul style="font-weight: bold;">
+  <li>What happens if I type in the wrong name and/or passphrase for a
+layer?</li>
+</ul>
+<div style="margin-left: 80px; font-style: italic;">If the layer
+doesn't already exist
+(with this different name and passphrase), a new empty one will be
+created. You will not receive any 'incorrect name/password'-type
+messages.<br>
+</div>
+<ul style="font-weight: bold;">
+  <li>What happens if I type in the wrong name and/or passphrase for a
+layer map?</li>
+</ul>
+<div style="margin-left: 80px;"><span style="font-style: italic;">Same
+situation as with previous
+question.</span><br>
+</div>
+<ul style="font-weight: bold;">
+  <li>How do I back up my PhoneBook filesystem?<br>
+  </li>
+</ul>
+<div style="margin-left: 80px;"><span style="font-style: italic;">Easy.
+Just unmount the filesystem, and back up the datastore directory<br>
+</span></div>
+<ul style="font-weight: bold;">
+  <li>Can I safely export a PhoneBook filesystem within my local
+network?<br>
+  </li>
+</ul>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;"><span style="font-style: italic;">Maybe.
+If you trust your network's security, then you should be able to export
+the filesystem's mount point (eg with nfs) as you do with other
+filesystems. But if you do so, then please note that layer/layermap
+namess and passphrases will be flying around the network in plaintext
+form - if someone's sniffing your network, you're toast.</span><br>
+<span style="font-style: italic;"></span></div>
+<span style="font-style: italic;"><br>
+</span>
+<div style="margin-left: 40px;"><span style="font-style: italic;">Another
+alternative is to export the datastore directory from your fileserver
+box, and install PhoneBook and mount the filesystem on your client box.
+That way, sensitive traffic won't flow over the network - just
+creates/reads/writes to physical datastore files (which is no help to
+an attacker).</span><br>
+<span style="font-style: italic;"></span></div>
+</div>
+<ul style="font-weight: bold;">
+  <li>Can I mount the same PhoneBook datastore more than once at any
+one time?</li>
+</ul>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;"><span style="font-style: italic;">You
+could, but I won't make any promises about what this will do to the
+integrity of your filesystem. At least, files you've written can go
+MIA, at worst, files and even whole directories can get irreversibly
+corrupted.</span><br>
+<span style="font-style: italic;"></span></div>
+<span style="font-style: italic;"><br>
+</span>
+<div style="margin-left: 40px;"><span style="font-style: italic;">It's
+definitely something we wouldn't recommend if you feel your data is
+worth anything</span><br>
+</div>
+</div>
+<ul style="font-weight: bold;">
+  <li>Will future versions of PhoneBook support multiple-mounting of
+the same datastore?</li>
+</ul>
+<div style="margin-left: 40px;">
+<div style="margin-left: 40px;"><span style="font-style: italic;">If
+you're talking about mounting the datastore and exporting the
+mountpoint, then that should already be working now.</span><br>
+<span style="font-style: italic;"></span></div>
+<span style="font-style: italic;"><br>
+</span>
+<div style="margin-left: 40px;"><span style="font-style: italic;">But
+if you're talking about having several instances of PhoneBook mounting
+the same physical datastore at the same time, then that's one beastly
+complex can of worms - our answer here is "sure, it'll be supported in
+future versions, just as soon as you send in the patches and we've had
+a chance to review and test them".</span><br>
+<span style="font-style: italic;"></span></div>
+</div>
+<ul style="font-weight: bold;">
+  <li>What crypto are you using?</li>
+</ul>
+<div style="margin-left: 80px;"><span style="font-style: italic;">256-bit
+Blowfish, CFB mode, plus SHA1 hashes. Period. No asymmetrical crypto
+needed.</span><br>
+</div>
+<ul style="font-weight: bold;">
+  <li>How are you generating your random numbers?<br>
+  </li>
+</ul>
+<div style="margin-left: 80px;"><span style="font-style: italic;">The
+SSLCrypto python module just hooks
+into OpenSSL libcrypto's random number generation routines. In
+successive versions of PhoneBook, I'll look at providing easy and more
+automatic ways to seed this prng.</span><br>
+</div>
+<ul>
+  <li><span style="font-weight: bold;">How are the files in the
+datastore stored, named and encrypted?</span><br>
+  </li>
+</ul>
+<div style="margin-left: 80px;"><span style="font-style: italic;">For
+each 'logical' file (or directory)
+as seen from the mountpoint, two physical files get written to the
+datastore&nbsp; - an inode file (with the </span><span
+ style="font-weight: bold; font-style: italic;">stat</span><span
+ style="font-style: italic;"> properties and a few other
+fields), plus the actual data file.</span><br
+ style="font-style: italic;">
+<br style="font-style: italic;">
+<span style="font-style: italic;">The name of the inode file is
+deterministically hashed from a
+combination of the layer name and passphrase plus a randomly generated
+31-bit inode number. The passphrase and IV for the inode file are a
+deterministic hash of layername+layerpassphrase+inodenum. The root
+directory inode for each layer differs only in that the inode number is
+hardwired as zero.</span><br style="font-style: italic;">
+<br style="font-style: italic;">
+<span style="font-style: italic;">The name of the physical data file is
+randomly generated, as is its
+passphrase and IV. These details are stored in cleartext within the
+inode file, protected by the encryption of the inode file.</span><br
+ style="font-style: italic;">
+<br style="font-style: italic;">
+<span style="font-style: italic;">The other file type in the physical
+datastore is the layermap file.
+Name of this file, as well as passphrase and IV, are a deterministic
+hash of permutations of layermapname+layermappassphrase. Great reliance
+is placed on the difficulty of extracting predictable patterns in SHA1
+hashes.</span><br style="font-style: italic;">
+<br style="font-style: italic;">
+<span style="font-style: italic;">As can be seen here, the layermap
+names and passphrases effectively
+serve as 'skeleton keys', which can unlock the names, passphrases and
+IVs of all the constituent layers and files, which is why, in above
+discussion, the need to protect the layermap passphrases, never storing
+them in the clear on the filesystem, is strongly emphasised.</span><br>
+</div>
+<ul style="font-weight: bold;">
+  <li>Will you be releasing any graphical programs for managing the
+layers, or will there only ever be the pbfs console program?</li>
+</ul>
+<div style="margin-left: 80px; font-style: italic;">We'll get around to
+writing a graphical
+layer and layermap management program - it's on the list. If you want
+to write one in the meantime, we suggest doing it in Python and using
+the sendPbCommand function in pbfs.py (command dict in, response dict
+out). This will save you much pain.<br>
+</div>
+<ul style="font-weight: bold;">
+  <li>How does pbfs 'talk' to the running filesystem code?</li>
+</ul>
+<div style="margin-left: 80px; font-style: italic;">When the filesystem
+starts up, it spawns a thread which creates a unix-domain socket in
+/tmp (eg <span style="font-weight: bold;">/tmp/pbfs.mnt_pbfs</span>).
+The <span style="font-weight: bold;">pbfs</span> utility<span
+ style="font-weight: bold;"></span> does a similar munge on the
+mountpoint path to find this socket file; it connects to this socket,
+sends the command to the filesystem, and gets back the response.<br>
+<br>
+This replaces an ugly earlier scheme where Phonebook used pseudofiles
+in the mountspace for writing commands and reading back responses.<br>
+</div>
+<ul style="font-weight: bold;">
+  <li>Will you be releasing a version of this program for Windows?</li>
+</ul>
+<div style="margin-left: 80px; font-style: italic;">Sure - send in your
+code and I'll check
+it out. Make sure any non-python code compiles cleanly with MSVC6
+(sadly, the standard compiler for winshit operating systems). If it
+works and passes tests/audits, we'll add it to the next release.<br>
+</div>
+<ul style="font-weight: bold;">
+  <li>What's the story with hard links? How come they sometimes work,
+and sometimes not?</li>
+</ul>
+<div style="margin-left: 80px;"><span style="font-style: italic;">One
+constraint of the Phonebook security model is that hard file links can
+only exist within the bounds of an individual layer. You cannot
+hardlink from one layer to another.</span><br
+ style="font-style: italic;">
+<br style="font-style: italic;">
+<span style="font-style: italic;">The only reliable way to create file
+hardlinks is to do so within the </span><span
+ style="font-weight: bold; font-style: italic;">/__layers/layername/...</span><span
+ style="font-style: italic;"> path</span>.<br>
+</div>
+<ul style="font-weight: bold;">
+  <li>I'm getting a lot of 'permission denied' errors. What gives?</li>
+</ul>
+<div style="margin-left: 80px;">Some possible causes include:<br>
+<ul>
+  <li>Insufficient permissions on the <span style="font-weight: bold;">datastore</span>
+or the <span style="font-weight: bold;">mountpoint</span> directory -
+if in doubt, chmod both of these to <span style="font-weight: bold;">777</span>
+or <span style="font-weight: bold;">ugo+rwx</span>.<br>
+  </li>
+  <li>You have mounted/unmounted/remounted the filesystem as different
+users. If in doubt, do:<br>
+    <span style="font-weight: bold;">su -c "chmod ugo+rw
+/path/to/datastore/*"</span></li>
+  <li>Alien psychic transmissions from a past life are interfering with
+your computer's interdimensional vibe</li>
+  <li>We've screwed up badly somewhere - please try to distil into a
+simple reproducible test case and send in a bug report<br>
+  </li>
+</ul>
+</div>
+<ul style="font-weight: bold;">
+  <li>Can I Have Several Different PhoneBook Filesystems Running At The
+Same Time On The Same Box?</li>
+</ul>
+<div style="margin-left: 80px;"><span style="font-style: italic;">We
+can't think of any reason why not. Do please make sure, though, to
+perform each mount with its own unique datastore and mountpoint
+directories.</span> Having two or more mounts with the same datastore
+directory, or the same mountpoint, is asking for Very Bad Things to
+happen. (Maybe I should stick in some code to sniff out /proc/mounts
+and head off such an occurrence).<br style="font-style: italic;">
+</div>
+<ul>
+  <li><span style="font-weight: bold;">Can I Distribute PhoneBook
+Filesystems via Email or on Disk/CD?</span><br>
+  </li>
+</ul>
+<div style="margin-left: 80px;">Most definitely yes.<br>
+<br>
+To send a filesystem via email, just tar or zip up the datastore
+directory and send it as an email attachment. You can choose to
+securely distribute different layermap name/passphrase details to
+different people, according to the level of trust.<br>
+<br>
+To distribute a filesystem via CD or floppy, just copy/burn the
+datastore's physical files onto that media. You should be able to (say)
+mount a CD containing PhoneBook datastore files into your OS, then
+mount that mount into PhoneBook.<br>
+<br>
+For example:<br>
+<div style="margin-left: 40px;">
+<pre><big><span style="font-weight: bold;"># mount /dev/scd0 /mnt/cdrom<br># mount -t pbfs /mnt/cdrom /mnt/pbfs<br># pbfs openmap /mnt/pbfs mapname<br>Passphrase:<br># <br></span></big></pre>
+</div>
+</div>
+<br>
+<br>
+<hr style="width: 100%; height: 2px;">
+<h1><a name="troubleshooting"></a><br>
+5. Troubleshooting</h1>
+<br>
+<br>
+</body>
+</html>

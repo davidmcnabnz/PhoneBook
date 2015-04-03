@@ -1,0 +1,28 @@
+#@+leo-ver=4
+#@+node:@file README
+#@@comment
+README file for the PhoneBook filesystem.
+
+PhoneBook is an encyrypted filesystem that builds on the
+innovative concepts of the now-defunct 'Rubberhose' filesystem.
+
+As with Rubberhose, PhoneBook offers encryption with plausible
+deniability, but aims to be vastly easier to build, install and
+deploy.
+
+Features of PhoneBook:
+    
+    - multi-layered filesystem, whereby you can open up any combination
+      of layers you choose, in any order, by submitting a combination
+      of passphrases.
+    - you can create 'layer stacks' which show different versions of the
+      filesystem, with different combinations and versions of files,
+      to different users
+    - chaffing adds the deniability - through generation of chaff layers,
+      which are cryptographically identical to regular layers, no attacker
+      can determine exactly how many actual layers there are
+
+To build and install PhoneBook, please carefully read the instructions in
+the INSTALL file.
+#@-node:@file README
+#@-leo

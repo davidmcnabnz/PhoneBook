@@ -1,0 +1,54 @@
+#@+leo-ver=4
+#@+node:@file ChangeLog
+#@@comment
+Changelog for phonebook
+
+06-Jan-2004 build 011
+
+  * updated doco with makechaff command
+  
+  * Updated the 'fuse' filesystem code (from avf.sf.net cvs), to take advantage
+    of 'fusermount -d devicepath' feature, which allows the phonebook physical
+    datastore location to be written to the mount tab - simplifying the required
+    syntax in /etc/fstab
+
+05-Jan-2004 build 010
+
+  * added 'makechaff' command for adding random chaff to filesystem (which
+    adds the plausible deniability)
+
+04-Jan-2004 build 009
+
+  * various critical bugfixes
+  
+03-Jan-2004 build 008
+
+  * fixed critical layermap writing bug (which was only affecting python2.2 users
+
+27-Dec-2003 build 007
+
+  * Various tidy-ups
+
+25-Dec-2003 build 006
+
+  * Implemented fixed file sizes
+     - all files smaller than a given size get padded out
+
+     - all files larger than a given size get broken up into
+       a linked list of files
+
+     - upon mounting, and with all writes, files in the physical datastore have
+       a random timestamp applied to them
+
+     - this means that all files in the physical store, regardless of whether
+       they are layermaps, inode files or inode content files, will all be of
+       the same length, which will further complicate the task of anyone trying
+       to crack the fs
+
+23-Dec-2003 build 005
+  
+  * pulled a bunch of bugs
+  * fixed build for fuse python module
+
+#@-node:@file ChangeLog
+#@-leo

@@ -1,0 +1,8 @@
+#@+leo-ver=4
+#@+node:@file INSTALL
+#@@comment
+INSTALL file for PhoneBook Encrypted Filesystem
+
+All installation and usage instructions are in the doc/ subdirectory.
+#@-node:@file INSTALL
+#@-leo
